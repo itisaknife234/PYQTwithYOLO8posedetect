@@ -52,8 +52,13 @@
 > ## Video timeline slider : Which is place in bottom and make you to slide the video timeline 
 > 
 # Working Process
-![image](https://github.com/user-attachments/assets/5de664df-7032-4fb4-9322-6d03f7373159)
-> It work same as the Original code
+> Before
+![image2detect](https://github.com/user-attachments/assets/9a15ec9d-6140-41e7-9768-7c9b512fcc37)
+>
+> After
+![image](https://github.com/user-attachments/assets/56aeb577-1ca4-4b8a-8012-904a1edb8ff1)
+>
+> The image process work very well
 > 
 ![image](https://github.com/user-attachments/assets/0cd66b69-aba1-42c7-9a99-97b7dcc0aae0)
 > and the Capture feature works well
