@@ -61,7 +61,7 @@
 > The image process work very well
 > 
 ![image](https://github.com/user-attachments/assets/0cd66b69-aba1-42c7-9a99-97b7dcc0aae0)
-> and the Capture feature works well
+> and the Capture feature make you can save the result in the same directory
 >
 ![image](https://github.com/user-attachments/assets/a66f618a-1683-4c0c-bc61-913844e8180d)
 >
