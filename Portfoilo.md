@@ -57,7 +57,11 @@
 > 
 ![image](https://github.com/user-attachments/assets/0cd66b69-aba1-42c7-9a99-97b7dcc0aae0)
 > and the Capture feature works well
-> 
+>
+![image](https://github.com/user-attachments/assets/a66f618a-1683-4c0c-bc61-913844e8180d)
+>
+>
+>
 > The Capture file will be placed on the same diractory where the code file located
 >
 # Conclusion
