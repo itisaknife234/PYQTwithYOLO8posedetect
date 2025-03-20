@@ -69,30 +69,22 @@
 >
 > You can select the moment where you want and also can save the gif which poses detected
 >
-> The Capture file will be placed on the same diractory where the code file located
+> The Capture file will be placed in the same directory where the code file located
+>
+### Video
+![image](https://github.com/user-attachments/assets/b7fb8c98-45f3-40e6-8450-315a350ba281)
+>
+> Same as GIF, You can select the moment with the slider and capture the moment
+>
+> Capture file will be placed in the same directory
+>
 >
 # Conclusion
-> The based code was perfectlty built so remaking the program was easy
+> The based code was works well but I want to add some more features
 > 
-> Using the Opencv and make what I intend was hard but there are some pattern and you can easly used on
+> Helped by GPT, I can make my plan work on this code
 > 
-> I really feel the fun and enjoy to add some features
+> Adding more features and make it work on perfection is hard but challenging
 > 
 > Thank you
 >
-# ETC
-> If you make a exe file by PyInstaller, the folder named "haarcascades" will automatically generated
->
-![image](https://github.com/user-attachments/assets/9c53ddf3-6f1c-4a95-9c62-bd250225f191)
->
-> Then, download the haarcascade files and place in it
->
-![image](https://github.com/user-attachments/assets/70ce0585-aadc-4c1b-beef-76087fb7ffc5)
->
-> Then the Model will appear
->
-![image](https://github.com/user-attachments/assets/ce124dad-6f41-4785-af29-28b39b30bf4d)
-
-
-
-
