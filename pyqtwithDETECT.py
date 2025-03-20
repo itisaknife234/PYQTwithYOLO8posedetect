@@ -85,13 +85,22 @@ class PoseDetectionApp(QWidget):
 
         self.file_path = None
         self.model_path = "yolov8n-pose.pt"
+        self.model = None
         self.cap = None
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_video_frame)
+        self.gif_timer = QTimer(self)
+        self.gif_timer.timeout.connect(self.update_gif_frame)
         self.pause = False
         self.total_frames = 0
-        self.fps = 0
+        self.fps = 0.0
+        self.total_time_ms = 0 
         self.displayed_frame = None
+
+        self.gif_frames = []
+        self.gif_index = 0
+
+        self.mode = None
 
     def select_file(self):
         file_dialog = QFileDialog()
@@ -120,29 +129,91 @@ class PoseDetectionApp(QWidget):
             print("파일을 입력하거나 선택하세요.")
             return
 
-        model = YOLO(self.model_path)
+        self.model = YOLO(self.model_path)
 
         if self.radio_image.isChecked():
-            self.detect_image(model)
+            self.mode = "image"
+            self.detect_image(self.model)
         elif self.radio_gif.isChecked():
-            self.detect_gif(model)
+            self.mode = "gif"
+            self.detect_gif(self.model)
         elif self.radio_video.isChecked():
-            self.detect_video(model)
+            self.mode = "video"
+            self.detect_video(self.model)
         else:
             print("지원되지 않는 파일 형식입니다.")
+
+    def show_image(self, frame):
+        """ QLabel에 이미지를 표시하는 공통 함수 """
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        label_width = self.display_label.width()
+        label_height = self.display_label.height()
+        frame_resized = cv2.resize(frame_rgb, (label_width, label_height), interpolation=cv2.INTER_AREA)
+        h, w, ch = frame_resized.shape
+        bytes_per_line = ch * w
+        qt_image = QImage(frame_resized.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
+        pixmap = QPixmap.fromImage(qt_image)
+        self.display_label.setPixmap(pixmap.scaled(label_width, label_height, Qt.AspectRatioMode.KeepAspectRatio))
+
+    def detect_image(self, model):
+        """ 이미지에서 Pose Detection 실행 후 UI에 표시 """
+        image = cv2.imread(self.file_path)
+        if image is None:
+            print(f"이미지를 불러올 수 없습니다: {self.file_path}")
+            return
+
+        results = model(image)
+        annotated_image = results[0].plot()
+        self.displayed_frame = annotated_image
+        self.show_image(annotated_image)
+        self.slider_timeline.setEnabled(False)
+        self.btn_pause.setEnabled(False)
+        self.btn_screenshot.setEnabled(True)
 
     def detect_video(self, model):
         self.cap = cv2.VideoCapture(self.file_path)
         if not self.cap.isOpened():
             print("영상을 불러올 수 없습니다.")
             return
-        self.fps = int(self.cap.get(cv2.CAP_PROP_FPS))
+
+        self.fps = self.cap.get(cv2.CAP_PROP_FPS)
         self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.slider_timeline.setMaximum(self.total_frames)
+        self.total_time_ms = int((self.total_frames / self.fps) * 1000)
+
+        self.slider_timeline.setMaximum(self.total_time_ms)
         self.slider_timeline.setEnabled(True)
         self.btn_pause.setEnabled(True)
         self.btn_screenshot.setEnabled(True)
-        self.timer.start(30)
+        if self.gif_timer.isActive():
+            self.gif_timer.stop()
+        self.timer.start(int(1000 / self.fps))
+
+    def detect_gif(self, model):
+        try:
+            frames = imageio.mimread(self.file_path)
+        except Exception as e:
+            print(f"GIF를 불러오는 중 오류 발생: {e}")
+            return
+
+        self.gif_frames = []
+        for frame in frames:
+            frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            results = model(frame_bgr)
+            annotated = results[0].plot()
+            self.gif_frames.append(annotated)
+
+        if not self.gif_frames:
+            print("GIF 프레임을 읽지 못했습니다.")
+            return
+
+        self.gif_index = 0
+        self.slider_timeline.setMaximum(len(self.gif_frames) - 1)
+        self.slider_timeline.setEnabled(True)
+        self.btn_pause.setEnabled(True)
+        self.btn_screenshot.setEnabled(True)
+        if self.timer.isActive():
+            self.timer.stop()
+        self.gif_timer.start(100)
 
     def update_video_frame(self):
         if not self.pause:
@@ -151,31 +222,38 @@ class PoseDetectionApp(QWidget):
                 self.timer.stop()
                 self.cap.release()
                 return
-            
-            model = YOLO(self.model_path)
-            results = model(frame)
+
+            results = self.model(frame)
             self.displayed_frame = results[0].plot()
+            self.show_image(self.displayed_frame)
 
-            frame_rgb = cv2.cvtColor(self.displayed_frame, cv2.COLOR_BGR2RGB)
+            current_time_ms = int(self.cap.get(cv2.CAP_PROP_POS_MSEC))
 
-            label_width = self.display_label.width()
-            label_height = self.display_label.height()
-            frame_resized = cv2.resize(frame_rgb, (label_width, label_height), interpolation=cv2.INTER_AREA)
+            self.slider_timeline.blockSignals(True)
+            self.slider_timeline.setValue(current_time_ms)
+            self.slider_timeline.blockSignals(False)
 
-            h, w, ch = frame_resized.shape
-            bytes_per_line = ch * w
-            qt_image = QImage(frame_resized.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
-            pixmap = QPixmap.fromImage(qt_image)
+            self.update_time_label(current_time_ms)
 
-            self.display_label.setPixmap(pixmap.scaled(label_width, label_height, Qt.AspectRatioMode.KeepAspectRatio))
-            current_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
-            self.slider_timeline.setValue(current_frame)
-            self.update_time_label(current_frame)
+    def update_gif_frame(self):
+        if not self.pause and self.gif_frames:
+            frame = self.gif_frames[self.gif_index]
+            self.displayed_frame = frame
+            self.show_image(frame)
+            self.slider_timeline.blockSignals(True)
+            self.slider_timeline.setValue(self.gif_index)
+            self.slider_timeline.blockSignals(False)
+            self.time_label.setText(f"{self.gif_index:02d} / {len(self.gif_frames):02d}")
+            self.gif_index = (self.gif_index + 1) % len(self.gif_frames)
 
-    def update_time_label(self, current_frame):
-        current_time = int(current_frame / self.fps)
-        total_time = int(self.total_frames / self.fps)
-        self.time_label.setText(f"{current_time // 60}:{current_time % 60:02d} / {total_time // 60}:{total_time % 60:02d}")
+    def update_time_label(self, current_ms):
+        current_sec = current_ms // 1000
+        total_sec = self.total_time_ms // 1000
+        current_min = current_sec // 60
+        current_sec_rem = current_sec % 60
+        total_min = total_sec // 60
+        total_sec_rem = total_sec % 60
+        self.time_label.setText(f"{current_min:02d}:{current_sec_rem:02d} / {total_min:02d}:{total_sec_rem:02d}")
 
     def toggle_pause(self):
         self.pause = not self.pause
@@ -185,9 +263,17 @@ class PoseDetectionApp(QWidget):
             cv2.imwrite("screenshot.jpg", self.displayed_frame)
             print("스크린샷이 저장되었습니다: screenshot.jpg")
 
-    def seek_video(self, frame_number):
-        if self.cap:
+    def seek_video(self, ms_value):
+        if self.mode == "video" and self.cap:
+            frame_number = int((ms_value / 1000) * self.fps)
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+        elif self.mode == "gif" and self.gif_frames:
+            self.gif_index = ms_value
+            frame = self.gif_frames[self.gif_index]
+            self.displayed_frame = frame
+            self.show_image(frame)
+            self.time_label.setText(f"{self.gif_index:02d} / {len(self.gif_frames):02d}")
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
