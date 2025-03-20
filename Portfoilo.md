@@ -49,7 +49,7 @@
 > 
 > ## Video detection : Video mode to detect the pose
 >
-> ## Video timeline slider : Which is place in bottom and make you to slide the video timeline 
+> ## Video timeline slider : Which is place in bottom and make you to slide the video and gif timeline 
 > 
 # Working Process
 > Before
