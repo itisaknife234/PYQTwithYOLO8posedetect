@@ -52,6 +52,7 @@
 > ## Video timeline slider : Which is place in bottom and make you to slide the video and gif timeline 
 > 
 # Working Process
+### Image
 > Before
 ![image2detect](https://github.com/user-attachments/assets/9a15ec9d-6140-41e7-9768-7c9b512fcc37)
 >
@@ -63,9 +64,10 @@
 ![image](https://github.com/user-attachments/assets/0cd66b69-aba1-42c7-9a99-97b7dcc0aae0)
 > and the Capture feature make you can save the result in the same directory
 >
+### GIF
 ![image](https://github.com/user-attachments/assets/a66f618a-1683-4c0c-bc61-913844e8180d)
 >
->
+> You can select the moment where you want and also can save the gif which poses detected
 >
 > The Capture file will be placed on the same diractory where the code file located
 >
